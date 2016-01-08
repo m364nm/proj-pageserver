@@ -51,9 +51,27 @@ def serve(sock, func):
 
 
 CAT = """
-     ^ ^
-   =( * )=
-   """
+             *     ,MMM8&&&.            *
+                  MMMM88&&&&&    .
+                 MMMM88&&&&&&&
+     *           MMM88PAGE&&&&
+                 MMM88NOT&&&&&
+                 'MMMFOUND&&&'
+                   'MMM8&&&'      *
+          |\___/|
+          )     (             .              '
+         =\     /=
+           )===(       *
+          /     \                       *
+         /       \            .
+         \       /
+  _/\_/\_/\__  _/_/\_/\_/\_/\_/\_/\_/\_/\_/\_
+  |  |  |  |( (  |  |  |  |  |  |  |  |  |  |
+  |  |  |  | ) ) |  |  |  |  |  |  |  |  |  |
+  |  |  |  |(_(  |  |  |  |  |  |  |  |  |  |
+  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+"""
 
 def respond(sock):
     """
@@ -68,22 +86,20 @@ def respond(sock):
     parts = request.split()
 
     if len(parts) > 1 and parts[0] == "GET":
-        i = 0
         filename = "." + parts[1]
-        #print("[respond]: Filename is:")
-        #print(filename)
-
         try:
             f = open(filename, 'rb')
+            transmit("HTTP/1.0 200 OK\n\n", sock)
             transmit(f.read(),sock)
 
         except IOError:
-            print("[respond]: File does not exits, here's a cat")
-            transmit("HTTP/1.0 200 OK\n\n", sock)
+            print("I don't handle this request: {}".format(parts[0]))
+            transmit("HTTP/1.0 404 Not Found\n\n", sock)
             transmit(CAT, sock)
             print("CAT {}".format(CAT))
     else:
-        transmit("HTTP/1.0 404 Not Found\n\n", sock)
+        print("I don't handle this request: {}".format(parts[0]))
+        transmit("HTTP/1.0 400 Bad Request\n\n", sock)
 
     sock.close()
 
@@ -104,8 +120,8 @@ def transmit(msg, sock):
 
 
 def main():
-    #port = random.randint(5000,8000)
-    port = 4001
+    port = random.randint(5000,8000)
+    #port = 4001
     sock = listen(port)
     print("Listening on port {}".format(port))
     print("Socket is {}".format(sock))
