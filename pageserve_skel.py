@@ -5,7 +5,7 @@ Socket programming in Python
   Based largely on https://docs.python.org/3.4/howto/sockets.html
   This trivial implementation is not robust:  We have omitted decent
   error handling and many other things to keep the illustration as simple
-  as possible. 
+  as possible.
 
   FIXME:
   Currently this program always serves an ascii graphic of a cat.
@@ -14,8 +14,7 @@ Socket programming in Python
 
 import socket    # Basic TCP/IP communication on the internet
 import random    # To pick a port at random, giving us some chance to pick a port not in use
-import _thread   # Response computation runs concurrently with main program 
-
+import _thread   # Response computation runs concurrently with main program
 
 def listen(portnum):
     """
@@ -53,9 +52,8 @@ def serve(sock, func):
 
 CAT = """
      ^ ^
-   =(   )=
+   =( * )=
    """
-
 
 def respond(sock):
     """
@@ -65,14 +63,27 @@ def respond(sock):
     sent = 0
     request = sock.recv(1024)  # We accept only short requests
     request = str(request, encoding='utf-8', errors='strict')
-    print("\nRequest was {}\n".format(request))
+    #print("\n[respond]: Request was {}\n".format(request))
 
     parts = request.split()
+
     if len(parts) > 1 and parts[0] == "GET":
-        transmit("HTTP/1.0 200 OK\n\n", sock)
-        transmit(CAT, sock)
+        i = 0
+        filename = "." + parts[1]
+        #print("[respond]: Filename is:")
+        #print(filename)
+
+        try:
+            f = open(filename, 'rb')
+            transmit(f.read(),sock)
+
+        except IOError:
+            print("[respond]: File does not exits, here's a cat")
+            transmit("HTTP/1.0 200 OK\n\n", sock)
+            transmit(CAT, sock)
+            print("CAT {}".format(CAT))
     else:
-        transmit("\nI don't handle this request: {}\n".format(request), sock)
+        transmit("HTTP/1.0 404 Not Found\n\n", sock)
 
     sock.close()
 
@@ -81,17 +92,23 @@ def respond(sock):
 def transmit(msg, sock):
     """It might take several sends to get the whole buffer out"""
     sent = 0
+    #print("[transmit]: msg was {}".format(msg))
+    #print("\nlength = {}".format(len(msg)))
     while sent < len(msg):
-        buff = bytes( msg[sent: ], encoding="utf-8")
+        try:
+            buff = bytes( msg[sent: ] )
+        except TypeError:
+            buff = bytes( msg[sent: ], encoding="utf-8")
+
         sent += sock.send( buff )
-    
+
 
 def main():
-    port = random.randint(5000,8000)
+    #port = random.randint(5000,8000)
+    port = 4001
     sock = listen(port)
     print("Listening on port {}".format(port))
     print("Socket is {}".format(sock))
     serve(sock, respond)
 
 main()
-    
